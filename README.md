@@ -108,6 +108,19 @@ Copy [`.env.example`](.env.example).
 
 Missing `STELLAR_RECIPIENT` or `OZ_API_KEY` → **`GET /price/xlm` returns 503** (fail closed, never a free quote).
 
+### Deploying on Vercel
+
+Copy the same env vars into the Vercel project (Production). **`GET /price/xlm` returning 402 only proves x402 is configured** — `POST /api/demo-pay` also needs `STELLAR_SECRET_KEY` and USDC on that payer.
+
+| Check | Why |
+|-------|-----|
+| Do **not** set `NEXT_PUBLIC_APP_URL` to `http://localhost:3000` on Vercel | Server-side pay would call localhost and fail. Omit it or use `https://your-app.vercel.app`. |
+| **Deployment Protection** enabled | Add [Protection Bypass for Automation](https://vercel.com/docs/security/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation) as `VERCEL_AUTOMATION_BYPASS_SECRET` |
+| `REFLECTOR_PUBLIC_KEY` | Any valid `G…`, or rely on `STELLAR_RECIPIENT` / payer public key (auto-fallback) |
+| Payer has testnet USDC | Same Circle faucet as local |
+
+The `Buffer()` deprecation line in logs comes from a dependency; it is not the payment failure.
+
 > **Demo security:** `STELLAR_SECRET_KEY` on the server is for **local learning only**. Do not deploy `POST /api/demo-pay` to production with a funded key; use a wallet or a dedicated agent process instead.
 
 ## Reflector feed

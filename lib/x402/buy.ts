@@ -66,7 +66,26 @@ export async function buyXlmPrice(origin: string): Promise<
   });
 
   const url = `${origin.replace(/\/$/, "")}/price/xlm`;
-  const res = await fetchWithPayment(url);
+  const headers: HeadersInit = {};
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
+  if (bypass) {
+    headers["x-vercel-protection-bypass"] = bypass;
+  }
+
+  let res: Response;
+  try {
+    res = await fetchWithPayment(url, { headers });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "x402 payment client failed";
+    return {
+      ok: false,
+      status: 500,
+      error: message,
+      hint:
+        "Check Vercel env: STELLAR_SECRET_KEY, payer USDC, OZ_API_KEY, and that demo-pay calls the live URL (not localhost). If Deployment Protection is on, set VERCEL_AUTOMATION_BYPASS_SECRET.",
+    };
+  }
   const text = await res.text();
 
   if (!res.ok) {
